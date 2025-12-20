@@ -1,6 +1,8 @@
 ﻿using Menu.Data;
 using Menu.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace Menu.Controllers
 {
@@ -12,10 +14,24 @@ namespace Menu.Controllers
         {
             _context = context;
         }
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-           List<Dish> dishes = _context.Dishes.ToList();
-            return View(dishes);
+            return View(await _context.Dishes.ToListAsync());
+        }
+
+        public async Task<IActionResult> Details(int? id)
+        {
+            var dish = await _context.Dishes
+                .Include(di => di.DishIngredients)
+                .ThenInclude(i => i.Ingredient)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (dish == null)
+            {
+                return NotFound();
+            }
+
+            return View(dish);
         }
     }
 }
